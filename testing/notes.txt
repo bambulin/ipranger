@@ -1,0 +1,96 @@
+In config.txt, odd lines are CIDRs, even lines are identities.
+
+In test.txt, odd lines are IP addresses, even lines are expected identities.
+
+Design:
+
+// Bigger range /56 contains smaller /64
+
+3eed:ec3e:33dd:745c:311f:a399:4345:2941
+3eed:ec3e:33dd:7400::/56
+Last: 3eed:ec3e:33dd:74ff:ffff:ffff:ffff:ffff
+Identity: XXX-0
+
+3eed:ec3e:33dd:745c:311f:a399:4345:2941
+3eed:ec3e:33dd:745c::/64
+Last: 3eed:ec3e:33dd:745c:ffff:ffff:ffff:ffff
+Identity: XXX-1
+
+// Bigger range /64 contains smaller /128
+
+8078:5a6c:9a02:43cb:5c51:b5cb:4151:13c5
+8078:5a6c:9a02:43cb::/64
+Last: 8078:5a6c:9a02:43cb:ffff:ffff:ffff:ffff
+Identity: XXX-2
+
+8078:5a6c:9a02:43cb:5c51:b5cb:4151:13a5
+8078:5a6c:9a02:43cb:5c51:b5cb:4151:13a5/128
+Last: 8078:5a6c:9a02:43cb:5c51:b5cb:4151:13a5
+Identity: XXX-3
+
+// Regular, no overlap
+
+f2f5:3aa1:d14e:494e:e784:9e90:ea60:20c8
+f2f5:3aa1:d14e:494e::/64
+Last: f2f5:3aa1:d14e:494e:ffff:ffff:ffff:ffff
+Identity: XXX-4
+
+8459:d925:dcfe:3ba8:4901:2850:d04f:fb60
+8459:d925:dcfe:3ba8::/64
+Last: 8459:d925:dcfe:3ba8:ffff:ffff:ffff:ffff
+Identity: XXX-5
+
+2961:35a7:5571:8b09:c769:7a58:14b3:9976
+2961:35a7:5571:8b09::/64
+Last: 2961:35a7:5571:8b09:ffff:ffff:ffff:ffff
+Identity: XXX-6
+
+ff1b:8a15:3ee2:79ac:5e6f:5982:b679:80f0
+ff1b:8a15:3ee2:79ac::/64
+Last: ff1b:8a15:3ee2:79ac:ffff:ffff:ffff:ffff
+Identity: XXX-7
+
+78bf:4c98:7dde:5a26:d12b:6a64:631e:19d2
+78bf:4c98:7dde:5a26::/64
+Last: 78bf:4c98:7dde:5a26:ffff:ffff:ffff:ffff
+Identity: XXX-8
+
+6940:8949:c2ac:605d:f4ce:97dd:56c2:61aa
+6940:8949:c2ac:605d:f4ce:97dd:56c2:61aa/128
+Last: 6940:8949:c2ac:605d:f4ce:97dd:56c2:61aa
+Identity: XXX-9
+
+8e28:fde7:10fb:1794:41c:10a4:59b2:24df
+8e28:fde7::/32
+Last: 8e28:fde7:ffff:ffff:ffff:ffff:ffff:ffff
+Identity: XXX-10
+
+30df:727e:3947:2d64:d29:73a9:bda3:6d52
+30df:727e:3000::/36
+Last: 30df:727e:3fff:ffff:ffff:ffff:ffff:ffff
+Identity: XXX-11
+
+5dbc:c035:612c:d346:c2c0:d318:fb7f:d23
+5dbc:c035:6100::/40
+Last 5dbc:c035:61ff:ffff:ffff:ffff:ffff:ffff
+Identity: XXX-12
+
+8f5a:2248:55a1:e97b:df51:2e40:f720:5ade
+8f5a:2248:55a0::/44
+Last: 8f5a:2248:55af:ffff:ffff:ffff:ffff:ffff
+Identity: XXX-13
+
+6e29:b24c:238b:45f1:22de:f0b:af5f:7c9
+6e29:b24c:238b::/48
+Last: 6e29:b24c:238b:ffff:ffff:ffff:ffff:ffff
+Identity: XXX-14
+
+2a68:7b1f:21bc:6a47:3630:7e46:5b40:f68a
+2a68:7b1f:21bc:6000::/52
+Last: 2a68:7b1f:21bc:6fff:ffff:ffff:ffff:ffff
+Identity: XXX-15
+
+16ee:cd3f:445e:906c:86e4:bd4b:d995:be7
+16ee:cd3f:445e:9060::/60
+Last: 16ee:cd3f:445e:906f:ffff:ffff:ffff:ffff
+Identity: XXX-16
