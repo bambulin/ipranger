@@ -5,3 +5,5 @@ ipranger.zip
 lib/*
 .vscode/*
 *.mdb
+docs
+container/iprangerzip.zip

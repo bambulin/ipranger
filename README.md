@@ -1,3 +1,4 @@
+# Usage {#mainpage}
 1) Create DB
 ```
 $ ./iprangercli ./testing/config.txt -c

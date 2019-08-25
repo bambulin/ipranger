@@ -1,0 +1,88 @@
+version: '3'
+services:
+  ipranger-writer-1:
+    image: "karm/ipranger:master"
+    user: ipranger
+    environment:
+      MODE: "WRITING"
+    volumes:
+      - /dev/shm/testdb/:/opt/iprangerzip/testdb:rw
+  ipranger-writer-2:
+    image: "karm/ipranger:master"
+    user: ipranger
+    environment:
+      MODE: "WRITING"
+    volumes:
+      - /dev/shm/testdb/:/opt/iprangerzip/testdb:rw
+  ipranger-reader-1:
+    image: "karm/ipranger:master"
+    user: ipranger
+    depends_on:
+      - ipranger-writer-1
+    environment:
+      MODE: "READING"
+    volumes:
+      - /dev/shm/testdb/:/opt/iprangerzip/testdb
+  ipranger-reader-2:
+    image: "karm/ipranger:master"
+    user: ipranger
+    depends_on:
+      - ipranger-writer-1
+    environment:
+      MODE: "READING"
+    volumes:
+      - /dev/shm/testdb/:/opt/iprangerzip/testdb
+  ipranger-reader-3:
+    image: "karm/ipranger:master"
+    user: ipranger
+    depends_on:
+      - ipranger-writer-1
+    environment:
+      MODE: "READING"
+    volumes:
+      - /dev/shm/testdb/:/opt/iprangerzip/testdb
+  ipranger-reader-4:
+    image: "karm/ipranger:master"
+    user: ipranger
+    depends_on:
+      - ipranger-writer-1
+    environment:
+      MODE: "READING"
+    volumes:
+      - /dev/shm/testdb/:/opt/iprangerzip/testdb
+  ipranger-reader-5:
+    image: "karm/ipranger:master"
+    user: ipranger
+    depends_on:
+      - ipranger-writer-1
+    environment:
+      MODE: "READING"
+    volumes:
+      - /dev/shm/testdb/:/opt/iprangerzip/testdb
+  ipranger-reader-6:
+    image: "karm/ipranger:master"
+    user: ipranger
+    depends_on:
+      - ipranger-writer-1
+    environment:
+      MODE: "READING"
+    volumes:
+      - /dev/shm/testdb/:/opt/iprangerzip/testdb
+  ipranger-reader-7:
+    image: "karm/ipranger:master"
+    user: ipranger
+    depends_on:
+      - ipranger-writer-1
+    environment:
+      MODE: "READING"
+    volumes:
+      - /dev/shm/testdb/:/opt/iprangerzip/testdb
+  ipranger-reader-8:
+    image: "karm/ipranger:master"
+    user: ipranger
+    depends_on:
+      - ipranger-writer-1
+    environment:
+      MODE: "READING"
+    volumes:
+      - /dev/shm/testdb/:/opt/iprangerzip/testdb

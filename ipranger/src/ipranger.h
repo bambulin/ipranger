@@ -1,21 +1,30 @@
-/*
-Copyright (C) 2019 Contributors to ipranger project.
+/*************************************************************************
+ * Copyright (C) 2019 Contributors to ipranger project.                   *
+ *                                                                        *
+ * This program is free software: you can redistribute it and/or modify   *
+ * it under the terms of the GNU General Public License as published by   *
+ * the Free Software Foundation, either version 3 of the License, or      *
+ * (at your option) any later version.                                    *
+ *                                                                        *
+ * This program is distributed in the hope that it will be useful,        *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of         *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the          *
+ * GNU General Public License for more details.                           *
+ *                                                                        *
+ * You should have received a copy of the GNU General Public License      *
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>. *
+ *                                                                        *
+ * See ACKNOWLEDGEMENTS.md for further details on licenses.               *
+ *************************************************************************/
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-See ACKNOWLEDGEMENTS.md for further detials on licenses.
-*/
+/**
+ * @file ipranger.h
+ * @author Michal Karm Babacek <karm@email.cz>
+ * @brief ipranger API
+ *
+ * IPRanger enables you to associate byte arrays with particular CIDR subnets,
+ * IP ranges.
+ */
 
 #include "util.h"
 #include <lmdb.h>
@@ -23,6 +32,15 @@ See ACKNOWLEDGEMENTS.md for further detials on licenses.
 #ifndef IPRANGER
 #define IPRANGER
 
+/**
+ * @defgroup IPRanger IPRanger library
+ */
+
+/**
+ * @defgroup Versioning Version
+ * @ingroup IPRanger
+ * @{
+ */
 #define IPRANGER_VERSION_MAJOR 0
 #define IPRANGER_VERSION_MINOR 1
 #define IPRANGER_VERSION_MICRO 0
@@ -30,40 +48,187 @@ See ACKNOWLEDGEMENTS.md for further detials on licenses.
 #define IPRANGER_VERSION_INT                                                   \
   IPRANGER_VERSION_TO_INT(IPRANGER_VERSION_MAJOR, IPRANGER_VERSION_MINOR,      \
                           IPRANGER_VERSION_MICRO)
+/** @} */
 
 /**
- * Must be called before any DB operations.
+ * @defgroup DB_Constants DB specific constants
+ *
+ * @ingroup IPRanger
+ * @{
  */
-extern void init_DB_env();
+/** Maximum size of the DB in bytes. Number must be a multiple of system page
+ * size. */
+#define IPRANGER_MAX_MAP_SIZE 4 * 1024 * 1024
+/** DB name used to store IPv6 ranges */
+#define IPRANGER_IPv6_DB_NAME "IPv6"
+/** DB name used to store IPv6 masks used */
+#define IPRANGER_IPv6_MASKS_DB_NAME "IPv6_masks"
+/** Identity string returned if no subnet (range) match is found for the given
+ * address. */
+#define IPRANGER_NO_MATCH_STR "NULL"
+/** Identity is the string we associate with CIDRs, i.e. it is what you get when
+ * you give an IP address to one of the get_identity* functions. Note it must
+ * not be a smaller number than what IPRANGER_NO_MATCH_STR fits in. */
+#define IPRANGER_MAX_IDENTITY_LENGTH 32
+/** @} */
 
 /**
- * CIDR 45 chars, e.g. 3eed:ec3e:33dd:745c::/64
- * IDENTITY 32 chars, e.g. XXX-1
+ * @defgroup Return_codes Return codes
+ * @ingroup IPRanger
+ * @{
  */
-extern int insert_cidr_identity_pair(const char *CIDR, const char *IDENTITY);
-
-// extern int insert_cidr_identity_pairs(const char *CIDRS[],
-//                                     const char *IDENTITIES[], int length);
-
-extern char *get_identity_str(const char *ADDRESS);
-
-// extern char **get_identity_strs(const char *ADDRESS[], int length);
-
-extern void printf_db_dump();
-
-// TODO:
-
-// extern char *get_identity_in6_addr(struct in6_addr);
-
-// extern char **get_identity_in6_addrs(struct in6_addr[], int length);
-
-// extern char *get_identity_in_addr(struct in_addr);
-
-// extern char **get_identity_in_addrs(struct in_addr[], int length);
+/** Type for specifying an error or status code. */
+typedef int iprg_stat_t;
+/** Successful operation */
+#define RC_SUCCESS 1
+/** Failed operation */
+#define RC_FAILURE 0
+/** @} */
 
 /**
- * Must be called after all DB operations.
+ * @defgroup IPRanger_API IPRanger API
+ *
+ * Functions to store mapping between CIDR and Identity and to look up in this
+ * mapping with IP address.
+ *
+ * In attempt to avoid data corruption and operation on inaccurate data, the
+ * library could terminate the program with abort(). If you don't like the
+ * behaviour, open a GitHub issue, please.
+ * @ingroup IPRanger
+ * @{
  */
-extern void close_DB_env();
+/**
+ * @brief Initializes DB engine. Must be called before any DB operations.
+ * @return RC_SUCCESS or RC_FAILURE
+ */
+extern iprg_stat_t iprg_init_DB_env(const char *path_to_db_dir, bool read_only);
+
+/**
+ * @brief Insert Identity for a CIDR defined subnet.
+ *
+ * It finds the LAST address of the given CIDR and stores it in the DB
+ * as the key for the given Identity value. The mask used is also stored
+ * for lookup purposes.
+ *
+ * @param cidr pointer to up to 45 chars long array, e.g.
+ * 3eed:ec3e:33dd:745c::/64 Note the library is pretty unforgiving about
+ * CIDR format. Mask is mandatory.
+ * @param identity pointer to up to 32 chars long array, e.g. XXX-1
+ *
+ * @return RC_SUCCESS or RC_FAILURE
+ */
+extern iprg_stat_t iprg_insert_cidr_identity_pair(const char *cidr,
+                                                  const char *identity);
+/**
+ * @brief Insert Identities for CIDR defined subnets.
+ *
+ * @see iprg_insert_cidr_identity_pair
+ *
+ * @return RC_SUCCESS if all inserts succeeded or RC_FAILURE if any of inserts
+ * failed
+ */
+extern iprg_stat_t iprg_insert_cidr_identity_pairs(const char *cidrs[],
+                                                   const char *identities[],
+                                                   int length);
+
+/**
+ * @brief Get Identity for a given string Address
+ *
+ * The address is combined with each mask previously used in @see
+ * iprg_insert_cidr_identity_pair and the LAST address of thus created subnet is
+ * used for lookup. Effectively you get the Identity corresponding to the subnet
+ * this address belongs to.
+ *
+ * @param address pointer to up to 40 chars long array, e.g.
+ * 8078:5a6c:9a02:43cb:ffff:ffff:ffff:ffff
+ * Note the library accepts also compressed format, e.g.
+ * f2f5:3aa1:d14e:494e::20c8
+ * @param identity pointer to 32 chars long array where the found identity will
+ * be written. Note that if no match is found, special string value is written,
+ * @see IPRANGER_NO_MATCH_STR
+ *
+ * @return RC_SUCCESS or RC_FAILURE. If RC_FAILURE is returned, the content of
+ * identity is not defined and should be discarded.
+ */
+extern iprg_stat_t iprg_get_identity_str(const char *address, char *identity);
+
+/**
+ * @brief Get Identities for given string Addresses
+ *
+ * @see iprg_get_identity_str
+ *
+ * @return RC_SUCCESS if all get ops succeeded or RC_FAILURE if any of get
+ * ops failed
+ */
+extern iprg_stat_t iprg_get_identity_strs(const char *addresses[],
+                                          char *identities[], int length);
+
+/**
+ * @brief Get Identity for a given in6_addr Address
+ *
+ * @param address IPv6 address
+ * @param identity @see iprg_get_identity_str
+ *
+ * @return RC_SUCCESS or RC_FAILURE
+ */
+extern iprg_stat_t iprg_get_identity_in6_addr(struct in6_addr address,
+                                              char *identity);
+/**
+ * @brief Get Identities for a given in6_addr Addresses
+ *
+ * @param addresses IPv6 addresses
+ * @param identities @see iprg_get_identity_str
+ *
+ * @return RC_SUCCESS or RC_FAILURE
+ */
+extern iprg_stat_t iprg_get_identity_in6_addrs(struct in6_addr addresses[],
+                                               char *identities[], int length);
+/**
+ * @brief Get Identity for a given in_addr Address
+ *
+ * @param address IPv4 address
+ * @param identity @see iprg_get_identity_str
+ *
+ * @return RC_SUCCESS or RC_FAILURE
+ */
+extern iprg_stat_t iprg_get_identity_in_addr(struct in_addr address,
+                                             char *identity);
+/**
+ * @brief Get Identities for a given in_addr Addresses
+ *
+ * @param addresses IPv4 addresses
+ * @param identities @see iprg_get_identity_str
+ *
+ * @return RC_SUCCESS or RC_FAILURE
+ */
+extern iprg_stat_t iprg_get_identity_in_addrs(struct in_addr addresses[],
+                                              char *identities[], int length);
+
+/**
+ * @brief No idea what Ashur means with this :-)
+ *
+ * @param address pointer to up to 40 chars long array, e.g.
+ * 8078:5a6c:9a02:43cb:ffff:ffff:ffff:ffff Note the library accepts also
+ * compressed format, e.g. f2f5:3aa1:d14e:494e::20c8
+ * @param identity multiple identities to....what? Check whther they belong ot
+ * he IP...?
+ *
+ * @return RC_SUCCESS or RC_FAILURE
+ */
+extern iprg_stat_t iprg_check_ip_range(char *address, int *identity, ...);
+
+/**
+ * @brief Should be called after all DB operations.
+ */
+extern void iprg_close_DB_env();
+
+/**
+ * @brief Dumps *whole* DB to stdout with printf record by record.
+ *
+ * Potentially expensive.
+ */
+extern void iprg_printf_db_dump();
+
+/** @} */
 
 #endif
