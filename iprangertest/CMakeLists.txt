@@ -1,4 +1,4 @@
-project(iprangercli C)
+project(iprangertest C)
 find_package(APR REQUIRED)
 include_directories(${APR_INCLUDE_DIR})
 include_directories(

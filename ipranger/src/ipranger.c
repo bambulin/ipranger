@@ -45,7 +45,6 @@ extern iprg_stat_t iprg_insert_cidr_identity_pair(const char *CIDR,
   MDB_dbi dbi_ipv6_masks;
   MDB_val key, data, key_mask, data_mask;
   MDB_txn *txn;
-  MDB_stat mst;
 
   char *start_ip = NULL;
   char *end_ip = NULL;
@@ -263,6 +262,7 @@ extern iprg_stat_t iprg_get_identity_str(const char *address, char *identity) {
 
   printf("  Used key: %s Hit key: ", address);
   ipv6_to_str_unexpanded((const struct in6_addr *)key_rr.mv_data);
+  printf("\n");
   // printf("\nFound data: %.*s%s\n", (int)data_rr.mv_size,
   //       (char *)data_rr.mv_data);
 
@@ -278,11 +278,11 @@ extern iprg_stat_t iprg_get_identity_str(const char *address, char *identity) {
     ret_identity = IPRANGER_NO_MATCH_STR;
   }
 
-  strncpy(identity, IPRANGER_MAX_IDENTITY_LENGTH, ret_identity);
+  strncpy(identity, ret_identity, IPRANGER_MAX_IDENTITY_LENGTH);
 
   mdb_txn_abort(txn);
   mdb_dbi_close(env, dbi_ipv6);
-  return ret_identity;
+  return RC_SUCCESS;
 }
 
 extern iprg_stat_t iprg_get_identity_strs(const char *addresses[],

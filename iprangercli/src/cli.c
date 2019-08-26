@@ -20,20 +20,23 @@
 #include "cli.h"
 #include "ipranger.h"
 
+#define DEFAULT_DB_DIR "./testdb"
+
 void help(char *argv[]) {
-  printf("IPRanger Usage: %s filename -c|-t\n", argv[0]);
+  printf("IPRanger Usage: %s filename -c|-t <-l NUMBER>\n", argv[0]);
   printf("  or              \n");
   printf("                %s -h|--help\n", argv[0]);
   printf("filename: See README.md for details on structure.\n");
   printf("-c        Configures, writes data from text file to LMDB.\n");
   printf("-t        Tests, looks up data in LMDB and compares to expected "
          "values.\n");
+  printf("-l NUMBER Optionally sets a loop of NUMBER repeats that does the -c "
+         "or -t task again and again.\n");
   printf("Blame: <karm@email.cz>\n");
 }
 
 int main(int argc, char *argv[]) {
 
-  apr_status_t rv;
   apr_pool_t *pool;
   apr_pool_t *pool_data;
   apr_file_t *fp;
@@ -62,24 +65,19 @@ int main(int argc, char *argv[]) {
     return APR_EGENERAL;
   }
 
-  // Initialize DB environment
-  init_DB_env();
+  bool read_only = (TEST_REGIME) ? true : false;
 
-  rv = apr_initialize();
-  if (rv != APR_SUCCESS) {
-    printf("APR apr_initialize err\n");
-    return APR_EGENERAL;
-  }
+  T(RC_SUCCESS == iprg_init_DB_env(DEFAULT_DB_DIR, read_only),
+    "DB init failed.");
+
+  T(APR_SUCCESS == apr_initialize(), "APR apr_initialize failed.");
 
   apr_pool_create(&pool_data, NULL);
   apr_pool_create(&pool, NULL);
 
-  rv = apr_file_open(&fp, argv[1], APR_READ | APR_BUFFERED,
-                     APR_FPROT_OS_DEFAULT, pool);
-  if (rv != APR_SUCCESS) {
-    printf("Error: Cannot open the file %s\n", argv[1]);
-    return APR_EGENERAL;
-  }
+  T(APR_SUCCESS == apr_file_open(&fp, argv[1], APR_READ | APR_BUFFERED,
+                                 APR_FPROT_OS_DEFAULT, pool),
+    "Failed to open file %s", argv[1]);
 
   char line[BUFSIZ + 1];
   int lineno;
@@ -117,7 +115,10 @@ int main(int argc, char *argv[]) {
         ///// READ ONE BEGIN
 
         char *not_found_msg = "";
-        char *identity = get_identity_str(ADDRESS);
+        char identity[32] = {0};
+
+        T(RC_SUCCESS == iprg_get_identity_str(ADDRESS, identity),
+          "Failed while getting identity for address %s", ADDRESS);
 
         if (identity == NULL) {
           not_found_msg = "NOT FOUND";
@@ -144,8 +145,8 @@ int main(int argc, char *argv[]) {
         // Process Address and Identity
       } else {
         IDENTITY = apr_pstrndup(pool_data, line + ws_offset, 32);
-
-        insert_cidr_identity_pair(CIDR, IDENTITY);
+        T(RC_SUCCESS == iprg_insert_cidr_identity_pair(CIDR, IDENTITY),
+          "Failed to insert CIDR %s, IDENTITY %s pair.", CIDR, IDENTITY);
       }
     }
   }
@@ -157,8 +158,8 @@ int main(int argc, char *argv[]) {
 
   // Dump
 
-  printf_db_dump();
+  iprg_printf_db_dump();
 
   // Close DB env
-  close_DB_env();
+  iprg_close_DB_env();
 }

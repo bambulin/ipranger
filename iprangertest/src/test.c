@@ -1,0 +1,49 @@
+/*************************************************************************
+ * Copyright (C) 2019 Contributors to ipranger project.                   *
+ *                                                                        *
+ * This program is free software: you can redistribute it and/or modify   *
+ * it under the terms of the GNU General Public License as published by   *
+ * the Free Software Foundation, either version 3 of the License, or      *
+ * (at your option) any later version.                                    *
+ *                                                                        *
+ * This program is distributed in the hope that it will be useful,        *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of         *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the          *
+ * GNU General Public License for more details.                           *
+ *                                                                        *
+ * You should have received a copy of the GNU General Public License      *
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>. *
+ *                                                                        *
+ * See ACKNOWLEDGEMENTS.md for further details on licenses.               *
+ *************************************************************************/
+
+#include "test.h"
+#include "ipranger.h"
+
+int main(void) {
+
+  const char *path_to_db_dir = "./iprangertest-db";
+  const bool read_only = false;
+
+  T(RC_SUCCESS == iprg_init_DB_env(path_to_db_dir, read_only),
+    "DB init failed.");
+
+  const char *identity = "X123456789X";
+  const char *cidr = "3eed:ec3e:33dd:7400::/56";
+  const char *address = "3eed:ec3e:33dd:745c:311f:a399:4345:2941";
+
+  T(RC_SUCCESS == iprg_insert_cidr_identity_pair(cidr, identity),
+    "Inserting identity failed.");
+
+  char retrieved_identity[32] = {0};
+
+  T(RC_SUCCESS == iprg_get_identity_str(address, retrieved_identity),
+    "Retrieving identity failed.");
+
+  T(0 == strncmp(identity, retrieved_identity, 32),
+    "Unexpected identity retrieved.");
+
+  iprg_printf_db_dump();
+
+  iprg_close_DB_env();
+}

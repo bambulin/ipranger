@@ -13,6 +13,7 @@ include_directories(${LMDB_INCLUDE_DIR})
 
 ADD_SUBDIRECTORY(ipranger)
 ADD_SUBDIRECTORY(iprangercli)
+ADD_SUBDIRECTORY(iprangertest)
 
 # Invoke target make release_zip
 #file(COPY ${CMAKE_SOURCE_DIR}/README.md DESTINATION ${CMAKE_BINARY_DIR})
