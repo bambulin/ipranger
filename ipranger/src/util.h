@@ -60,6 +60,12 @@
   exit(EXIT_FAILURE);
 #define ERR_MSG(fmt, ...) fprintf(stderr, fmt, ##__VA_ARGS__)
 
+struct ip_addr {
+	unsigned int family;
+	unsigned int ipv4_sin_addr;
+	unsigned char ipv6_sin_addr[16];
+};
+
 enum network_type { IPv4, IPv6 };
 
 typedef struct ip_range {
@@ -72,7 +78,7 @@ typedef struct ip_range {
 
 typedef uint32_t in_addr_t;
 
-int ipnacstun_cidr_to_ip(const char *cidr, char **start_ip, char **stop_ip,
+int cidr_to_ip(const char *cidr, char **start_ip, char **stop_ip,
                          char **mymask, ip_range_t *ip_range,
                          char *default_mask);
 

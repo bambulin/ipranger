@@ -51,7 +51,7 @@ extern iprg_stat_t iprg_insert_cidr_identity_pair(const char *CIDR,
   char *mask = NULL;
   ip_range_t ip_range;
 
-  ipnacstun_cidr_to_ip(CIDR, &start_ip, &end_ip, &mask, &ip_range, NULL);
+  cidr_to_ip(CIDR, &start_ip, &end_ip, &mask, &ip_range, NULL);
   printf("CIDR:     %s\n", CIDR);
   printf("Start:    %s\n", start_ip);
   printf("End:      %s\n", end_ip);
@@ -164,17 +164,15 @@ extern iprg_stat_t iprg_insert_cidr_identity_pairs(const char *cidrs[],
                                                    const char *identities[],
                                                    int length) {
   int rc = 0;
-  CHECK(1, "Not implemented.");
-  return RC_FAILURE;
-  /*
-   for (int i = 0; i <= length; i++) {
-     int r = iprg_insert_cidr_identity_pair(cidrs[i], identities[i]);
-     if (r > rc) {
-       rc = r;
-     }
-   }
-   return rc;
-   */
+  // TODO this is really stupid. We should probably do multiple writes within a
+  // single transaction in iprg_insert_cidr_identity_pair;
+  for (int i = 0; i <= length; i++) {
+    int r = iprg_insert_cidr_identity_pair(cidrs[i], identities[i]);
+    if (r > rc) {
+      rc = r;
+    }
+  }
+  return rc;
 }
 
 extern iprg_stat_t iprg_get_identity_str(const char *address, char *identity) {
@@ -231,8 +229,7 @@ extern iprg_stat_t iprg_get_identity_str(const char *address, char *identity) {
     cursor = NULL;
     ip_range_t ip_range_n;
 
-    ipnacstun_cidr_to_ip(address, &start_ip_n, &end_ip_n, &mask_n, &ip_range_n,
-                         masks[j]);
+    cidr_to_ip(address, &start_ip_n, &end_ip_n, &mask_n, &ip_range_n, masks[j]);
     memset(v_data_rr, 0, sizeof(v_data_rr));
     k_data_rr = ip_range_n.stop6;
 
@@ -287,44 +284,55 @@ extern iprg_stat_t iprg_get_identity_str(const char *address, char *identity) {
 
 extern iprg_stat_t iprg_get_identity_strs(const char *addresses[],
                                           char *identities[], int length) {
+
   int rc = 0;
-  CHECK(1, "Not implemented.");
-  return RC_FAILURE;
-  /*char *identities[length];
-  for (int i = 0; i < length; i++) {
-    identities[i] = get_identity_str(addresses[i]);
+  // TODO this is really stupid. We should probably do multiple writes within a
+  // single transaction in iprg_insert_cidr_identity_pair;
+  for (int i = 0; i <= length; i++) {
+    int r = iprg_get_identity_str(addresses[i], identities[i]);
+    if (r > rc) {
+      rc = r;
+    }
   }
-  return identities;
-  */
+
+  return rc;
 }
 
-extern iprg_stat_t iprg_get_identity_in6_addr(struct in6_addr address,
-                                              char *identity) {
-  int rc = 0;
-  CHECK(1, "Not implemented.");
-  return RC_FAILURE;
-}
-
-extern iprg_stat_t iprg_get_identity_in6_addrs(struct in6_addr addresses[],
-                                               char *identities[], int length) {
-  int rc = 0;
-  CHECK(1, "Not implemented.");
-  return RC_FAILURE;
-}
-
-extern iprg_stat_t iprg_get_identity_in_addr(struct in_addr address,
+extern iprg_stat_t iprg_get_identity_ip_addr(struct ip_addr *address,
                                              char *identity) {
-  int rc = 0;
-  CHECK(1, "Not implemented.");
-  return RC_FAILURE;
+  if (address == NULL) {
+    return RC_FAILURE;
+  }
+
+  if (address->family == AF_INET) {
+    char iprg_address[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &(address->ipv4_sin_addr), iprg_address,
+              INET_ADDRSTRLEN);
+    return iprg_get_identity_str(iprg_address, identity);
+  } else if (address->family == AF_INET6) {
+    char iprg_address[INET6_ADDRSTRLEN];
+    inet_ntop(AF_INET6, &(address->ipv6_sin_addr), iprg_address,
+              INET6_ADDRSTRLEN);
+    return iprg_get_identity_str(iprg_address, identity);
+  } else {
+    return RC_FAILURE;
+  }
 }
 
-extern iprg_stat_t iprg_get_identity_in_addrs(struct in_addr addresses[],
+extern iprg_stat_t iprg_get_identity_ip_addrs(struct ip_addr *addresses[],
                                               char *identities[], int length) {
   int rc = 0;
-  CHECK(1, "Not implemented.");
-  return RC_FAILURE;
+  // TODO this is really stupid. We should probably do multiple writes within a
+  // single transaction in iprg_insert_cidr_identity_pair;
+  for (int i = 0; i <= length; i++) {
+    int r = iprg_get_identity_ip_addr(addresses[i], identities[i]);
+    if (r > rc) {
+      rc = r;
+    }
+  }
+  return rc;
 }
+
 extern iprg_stat_t iprg_check_ip_range(char *address, int *identity, ...) {
   int rc = 0;
   CHECK(1, "Not implemented.");

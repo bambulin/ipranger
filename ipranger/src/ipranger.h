@@ -164,44 +164,24 @@ extern iprg_stat_t iprg_get_identity_strs(const char *addresses[],
                                           char *identities[], int length);
 
 /**
- * @brief Get Identity for a given in6_addr Address
+ * @brief Get Identity for a given ip_addr Address
  *
- * @param address IPv6 address
+ * @param address IPv4 or IPv6 address
  * @param identity @see iprg_get_identity_str
  *
  * @return RC_SUCCESS or RC_FAILURE
  */
-extern iprg_stat_t iprg_get_identity_in6_addr(struct in6_addr address,
-                                              char *identity);
-/**
- * @brief Get Identities for a given in6_addr Addresses
- *
- * @param addresses IPv6 addresses
- * @param identities @see iprg_get_identity_str
- *
- * @return RC_SUCCESS or RC_FAILURE
- */
-extern iprg_stat_t iprg_get_identity_in6_addrs(struct in6_addr addresses[],
-                                               char *identities[], int length);
-/**
- * @brief Get Identity for a given in_addr Address
- *
- * @param address IPv4 address
- * @param identity @see iprg_get_identity_str
- *
- * @return RC_SUCCESS or RC_FAILURE
- */
-extern iprg_stat_t iprg_get_identity_in_addr(struct in_addr address,
+extern iprg_stat_t iprg_get_identity_ip_addr(struct ip_addr *address,
                                              char *identity);
 /**
- * @brief Get Identities for a given in_addr Addresses
+ * @brief Get Identities for a given ip_addr Addresses
  *
- * @param addresses IPv4 addresses
+ * @param addresses IPv4 or IPv6 addresses
  * @param identities @see iprg_get_identity_str
  *
  * @return RC_SUCCESS or RC_FAILURE
  */
-extern iprg_stat_t iprg_get_identity_in_addrs(struct in_addr addresses[],
+extern iprg_stat_t iprg_get_identity_ip_addrs(struct ip_addr *addresses[],
                                               char *identities[], int length);
 
 /**
