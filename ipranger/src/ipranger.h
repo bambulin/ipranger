@@ -61,8 +61,14 @@
 #define IPRANGER_MAX_MAP_SIZE 4 * 1024 * 1024
 /** DB name used to store IPv6 ranges */
 #define IPRANGER_IPv6_DB_NAME "IPv6"
+/** DB name used to store IPv4 ranges */
+#define IPRANGER_IPv4_DB_NAME "IPv4"
 /** DB name used to store IPv6 masks used */
 #define IPRANGER_IPv6_MASKS_DB_NAME "IPv6_masks"
+/** DB name used to store IPv4 masks used */
+#define IPRANGER_IPv4_MASKS_DB_NAME "IPv4_masks"
+/** Max masks recorded - in reality probably just 33, theoretically 128 **/
+#define IPRANGER_MAX_MASKS 128
 /** Identity string returned if no subnet (range) match is found for the given
  * address. */
 #define IPRANGER_NO_MATCH_STR "NULL"
@@ -110,7 +116,7 @@ extern iprg_stat_t iprg_init_DB_env(const char *path_to_db_dir, bool read_only);
  * as the key for the given Identity value. The mask used is also stored
  * for lookup purposes.
  *
- * @param cidr pointer to up to 45 chars long array, e.g.
+ * @param cidr pointer to up to INET6_ADDRSTRLEN (46) chars long array, e.g.
  * 3eed:ec3e:33dd:745c::/64 Note the library is pretty unforgiving about
  * CIDR format. Mask is mandatory.
  * @param identity pointer to up to 32 chars long array, e.g. XXX-1
@@ -208,7 +214,8 @@ extern void iprg_close_DB_env();
  * Potentially expensive.
  */
 extern void iprg_printf_db_dump();
-
+void ipv6_db_dump();
+void ipv4_db_dump();
 /** @} */
 
 #endif

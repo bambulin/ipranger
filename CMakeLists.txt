@@ -15,14 +15,15 @@ ADD_SUBDIRECTORY(ipranger)
 ADD_SUBDIRECTORY(iprangercli)
 ADD_SUBDIRECTORY(iprangertest)
 
-# Invoke target make release_zip
-#file(COPY ${CMAKE_SOURCE_DIR}/README.md DESTINATION ${CMAKE_BINARY_DIR})
-#file(COPY ${CMAKE_SOURCE_DIR}/LICENSE DESTINATION ${CMAKE_BINARY_DIR})
-#set(RELEASE_ZIP_NAME "archive-${VERSION}.zip")
-#add_custom_target(release_zip COMMAND
-#    ${CMAKE_COMMAND} -E tar "cfv" "${RELEASE_ZIP_NAME}" --format=zip
-#    "${CMAKE_BINARY_DIR}/bin"
-#    "${CMAKE_BINARY_DIR}/README.md"
-#    "${CMAKE_BINARY_DIR}/LICENSE")
-#file(SHA1 "${CMAKE_BINARY_DIR}/${RELEASE_ZIP_NAME}" RELEASE_FILE_HASH)
-#file(WRITE "archive-${VERSION}.sha1" ${RELEASE_FILE_HASH})
+install(DIRECTORY DESTINATION ${CMAKE_BINARY_DIR}/dist/bin/testdb)
+install(FILES ${CMAKE_SOURCE_DIR}/testing/config.txt
+              ${CMAKE_SOURCE_DIR}/testing/test.txt
+        DESTINATION ${CMAKE_BINARY_DIR}/dist/bin/testing)
+install(FILES ${CMAKE_SOURCE_DIR}/ACKNOWLEDGEMENTS.md
+              ${CMAKE_SOURCE_DIR}/README.md
+              ${CMAKE_SOURCE_DIR}/LICENSE
+        DESTINATION ${CMAKE_BINARY_DIR}/dist)
+        set(custom_script ${PROJECT_BINARY_DIR}/custom_install_scripts/run.cmake)
+set(custom_script ${CMAKE_SOURCE_DIR}/cmake/post_install.cmake)
+configure_file(${CMAKE_SOURCE_DIR}/cmake/post_install.cmake.in ${custom_script} @ONLY)
+install(SCRIPT ${custom_script})

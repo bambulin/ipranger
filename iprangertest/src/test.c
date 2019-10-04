@@ -20,14 +20,7 @@
 #include "test.h"
 #include "ipranger.h"
 
-int main(void) {
-
-  const char *path_to_db_dir = "./iprangertest-db";
-  const bool read_only = false;
-
-  T(RC_SUCCESS == iprg_init_DB_env(path_to_db_dir, read_only),
-    "DB init failed.");
-
+void basic_ipv6_test() {
   const char *identity = "X123456789X";
   const char *cidr = "3eed:ec3e:33dd:7400::/56";
   const char *address = "3eed:ec3e:33dd:745c:311f:a399:4345:2941";
@@ -42,6 +35,41 @@ int main(void) {
 
   T(0 == strncmp(identity, retrieved_identity, 32),
     "Unexpected identity retrieved.");
+}
+
+void basic_ipv4_test() {
+  const char *identity_v4 = "XaaaaaX";
+  const char *cidr_v4 = "10.1.1.0/25";
+  const char *address_v4 = "10.1.1.13";
+
+  T(RC_SUCCESS == iprg_insert_cidr_identity_pair(cidr_v4, identity_v4),
+    "Inserting identity failed.");
+
+  char retrieved_identity[32] = {0};
+
+  T(RC_SUCCESS == iprg_get_identity_str(address_v4, retrieved_identity),
+    "Retrieving identity failed.");
+
+  T(0 == strncmp(identity_v4, retrieved_identity, 32),
+    "Unexpected identity retrieved.");
+}
+
+int main(void) {
+  printf(DB_DIR_MSG "\n");
+  remove(DEFAULT_DB_DIR "/data.mdb");
+  remove(DEFAULT_DB_DIR "/lock.mdb");
+  const bool read_only = false;
+
+  T(RC_SUCCESS == iprg_init_DB_env(DEFAULT_DB_DIR, read_only),
+    "DB init failed.");
+
+  basic_ipv6_test();
+
+  printf("\n");
+
+  basic_ipv4_test();
+
+  printf("\n\n");
 
   iprg_printf_db_dump();
 

@@ -20,8 +20,6 @@
 #include "cli.h"
 #include "ipranger.h"
 
-#define DEFAULT_DB_DIR "./testdb"
-
 void help(char *argv[]) {
   printf("IPRanger Usage: %s filename -c|-t <-l NUMBER>\n", argv[0]);
   printf("  or              \n");
@@ -140,7 +138,7 @@ int main(int argc, char *argv[]) {
 
       // Load address
       if (lineno % 2 == 1) {
-        CIDR = apr_pstrndup(pool_data, line + ws_offset, 45);
+        CIDR = apr_pstrndup(pool_data, line + ws_offset, INET6_ADDRSTRLEN);
 
         // Process Address and Identity
       } else {

@@ -32,7 +32,6 @@
 #ifndef IPRANGER_TEST
 #define IPRANGER_TEST
 
-// Moved to util.h
-// void ipv6_to_str_unexpanded(const struct in6_addr *addr);
+#define DEFAULT_DB_DIR "./testdb"
 
 #endif

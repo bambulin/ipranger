@@ -22,7 +22,25 @@
 #define SMALL_BUFFER 512
 #define BIG_BUFFER 1024
 
-void ipv6_to_str_unexpanded(const struct in6_addr *addr) {
+/*
+
+http://man7.org/linux/man-pages/man3/inet_pton.3.html
+
+NAME         top
+
+       inet_pton - convert IPv4 and IPv6 addresses from text to binary form
+
+SYNOPSIS         top
+
+       #include <arpa/inet.h>
+
+       int inet_pton(int af, const char *src, void *dst);
+
+
+
+*/
+
+void ipv6_to_str(const struct in6_addr *addr) {
   printf(
       "%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x",
       (int)addr->s6_addr[0], (int)addr->s6_addr[1], (int)addr->s6_addr[2],
@@ -32,6 +50,9 @@ void ipv6_to_str_unexpanded(const struct in6_addr *addr) {
       (int)addr->s6_addr[12], (int)addr->s6_addr[13], (int)addr->s6_addr[14],
       (int)addr->s6_addr[15]);
 }
+
+// TODO: ??? *addr ???
+void ipv4_to_str(const struct in_addr *addr) { printf(inet_ntoa(*addr)); }
 
 static int ntop(struct in_addr *ip, char *host, size_t host_size) {
   struct sockaddr_in in;
@@ -51,9 +72,8 @@ static int ntop6(struct in6_addr *ip, char *host, size_t host_size) {
                      host_size, NULL, 0, NI_NUMERICHOST);
 }
 
-int cidr_to_ip(const char *cidr, char **start_ip, char **stop_ip,
-                         char **mymask, ip_range_t *ip_range,
-                         char *default_mask) {
+int cidr_to_ip(const char *cidr, char **start_ip, char **stop_ip, char **mymask,
+               ip_range_t *ip_range, char *default_mask) {
   char *cidr_tok;
   char *first_ip;
   char *mask;
@@ -144,9 +164,6 @@ int cidr_to_ip(const char *cidr, char **start_ip, char **stop_ip,
       return 0;
     }
     *stop_ip = strdup(host);
-
-    free(first_ip);
-    return 1;
   } else {
     if (getaddrinfo(first_ip, NULL, &hints, &res) != 0) {
       return 0;

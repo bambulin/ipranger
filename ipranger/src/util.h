@@ -42,6 +42,8 @@
 #include <syslog.h>
 #include <unistd.h>
 
+#define DEBUG 1
+
 #define T(test, ...)                                                           \
   ((test) ? (void)0                                                            \
           : ((void)fprintf(stderr, "%s:%d: ", __FILE__, __LINE__),             \
@@ -54,16 +56,15 @@
           : ((void)fprintf(stderr, "%s:%d: %s: %s\n", __FILE__, __LINE__, msg, \
                            mdb_strerror(rc)),                                  \
              abort()))
-#define DEBUG 1
 #define DIE(X, ...)                                                            \
   fprintf(stderr, "ERROR %s:%d: " X "\n", __FILE__, __LINE__, ##__VA_ARGS__);  \
   exit(EXIT_FAILURE);
 #define ERR_MSG(fmt, ...) fprintf(stderr, fmt, ##__VA_ARGS__)
 
 struct ip_addr {
-	unsigned int family;
-	unsigned int ipv4_sin_addr;
-	unsigned char ipv6_sin_addr[16];
+  unsigned int family;
+  unsigned int ipv4_sin_addr;
+  unsigned char ipv6_sin_addr[16];
 };
 
 enum network_type { IPv4, IPv6 };
@@ -78,11 +79,11 @@ typedef struct ip_range {
 
 typedef uint32_t in_addr_t;
 
-int cidr_to_ip(const char *cidr, char **start_ip, char **stop_ip,
-                         char **mymask, ip_range_t *ip_range,
-                         char *default_mask);
+int cidr_to_ip(const char *cidr, char **start_ip, char **stop_ip, char **mymask,
+               ip_range_t *ip_range, char *default_mask);
 
 // Debug stuff
-void ipv6_to_str_unexpanded(const struct in6_addr *addr);
+void ipv6_to_str(const struct in6_addr *addr);
+void ipv4_to_str(const struct in_addr *addr);
 
 #endif

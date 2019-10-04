@@ -32,6 +32,8 @@
 #ifndef IPRANGER_TEST
 #define IPRANGER_TEST
 
+#define DEFAULT_DB_DIR "./testdb"
+#define DB_DIR_MSG "Deleting and re-creating " DEFAULT_DB_DIR " dir contents.\n"
 // Moved to util.h
 // void ipv6_to_str_unexpanded(const struct in6_addr *addr);
 
