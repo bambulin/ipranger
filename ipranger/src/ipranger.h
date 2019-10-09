@@ -27,6 +27,7 @@
  */
 
 #include "util.h"
+#include "version.h"
 #include <lmdb.h>
 
 #ifndef IPRANGER
@@ -37,28 +38,15 @@
  */
 
 /**
- * @defgroup Versioning Version
- * @ingroup IPRanger
- * @{
- */
-#define IPRANGER_VERSION_MAJOR 0
-#define IPRANGER_VERSION_MINOR 1
-#define IPRANGER_VERSION_MICRO 0
-#define IPRANGER_VERSION_TO_INT(a, b, c) (((a) << 24) | ((b) << 16) | (c))
-#define IPRANGER_VERSION_INT                                                   \
-  IPRANGER_VERSION_TO_INT(IPRANGER_VERSION_MAJOR, IPRANGER_VERSION_MINOR,      \
-                          IPRANGER_VERSION_MICRO)
-/** @} */
-
-/**
  * @defgroup DB_Constants DB specific constants
  *
  * @ingroup IPRanger
  * @{
  */
-/** Maximum size of the DB in bytes. Number must be a multiple of system page
- * size. */
-#define IPRANGER_MAX_MAP_SIZE 4 * 1024 * 1024
+/** Maximum size of the DB in multiples of page size in bytes
+ * e.g. on my system: getconf PAGESIZE is 4096 so setting 1048576 here gives 4GB
+ * max LMDB DB size.*/
+#define IPRANGER_MAX_MAP_SIZE_IN_PAGES 1048576
 /** DB name used to store IPv6 ranges */
 #define IPRANGER_IPv6_DB_NAME "IPv6"
 /** DB name used to store IPv4 ranges */

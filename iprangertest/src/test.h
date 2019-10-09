@@ -23,10 +23,6 @@
 #include <stdlib.h>
 #include <strings.h>
 
-#include <apr_file_io.h>
-#include <apr_lib.h>
-#include <apr_pools.h>
-#include <apr_strings.h>
 #include <lmdb.h>
 
 #ifndef IPRANGER_TEST
@@ -34,7 +30,5 @@
 
 #define DEFAULT_DB_DIR "./testdb"
 #define DB_DIR_MSG "Deleting and re-creating " DEFAULT_DB_DIR " dir contents.\n"
-// Moved to util.h
-// void ipv6_to_str_unexpanded(const struct in6_addr *addr);
 
 #endif

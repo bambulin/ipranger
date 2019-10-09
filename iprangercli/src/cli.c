@@ -35,32 +35,28 @@ void help(char *argv[]) {
 
 int main(int argc, char *argv[]) {
 
-  apr_pool_t *pool;
-  apr_pool_t *pool_data;
-  apr_file_t *fp;
-
-  char TEST_REGIME = 0;
+  bool TEST_REGIME = false;
 
   if (argc != 3) {
     help(argv);
-    return APR_EGENERAL;
+    return RET_ERROR;
   }
 
   if (strncasecmp(argv[1], "-h", 2) == 0 ||
       strncasecmp(argv[1], "--help", 6) == 0) {
     help(argv);
-    return APR_SUCCESS;
+    return RET_SUCCESS;
   }
 
   if (strncasecmp(argv[2], "-c", 2) == 0) {
     printf("Processing config file.\n");
-    TEST_REGIME = 0;
+    TEST_REGIME = false;
   } else if (strncasecmp(argv[2], "-t", 2) == 0) {
-    TEST_REGIME = 1;
+    TEST_REGIME = true;
     printf("Processing test file.\n");
   } else {
     help(argv);
-    return APR_EGENERAL;
+    return RET_ERROR;
   }
 
   bool read_only = (TEST_REGIME) ? true : false;
@@ -68,52 +64,57 @@ int main(int argc, char *argv[]) {
   T(RC_SUCCESS == iprg_init_DB_env(DEFAULT_DB_DIR, read_only),
     "DB init failed.");
 
-  T(APR_SUCCESS == apr_initialize(), "APR apr_initialize failed.");
+  FILE *stream = fopen(argv[1], "r");
+  char line[LINE_LENGTH];
 
-  apr_pool_create(&pool_data, NULL);
-  apr_pool_create(&pool, NULL);
+  if (stream == NULL) {
+    printf("There was an error opening %s\n", argv[1]);
+    return RET_ERROR;
+  }
 
-  T(APR_SUCCESS == apr_file_open(&fp, argv[1], APR_READ | APR_BUFFERED,
-                                 APR_FPROT_OS_DEFAULT, pool),
-    "Failed to open file %s", argv[1]);
+  int linecount = 0;
+  while (fgets(line, LINE_LENGTH, stream)) {
+    linecount++;
+  }
 
-  char line[BUFSIZ + 1];
-  int lineno;
-  char *CIDR = NULL;
-  char *IDENTITY = NULL;
-  char *ADDRESS = NULL;
+  if (linecount < 2) {
+    printf("Error: %s seems to contain no IP address Identity pair.\n",
+           argv[1]);
+    return RET_ERROR;
+  }
+  if (linecount % 2 != 0) {
+    printf("Error: %s seems to contain odd number of lines. That is not "
+           "expected.\n",
+           argv[1]);
+    return RET_ERROR;
+  }
 
-  for (lineno = 1; apr_file_gets(line, BUFSIZ, fp) == APR_SUCCESS; lineno++) {
-    int ws_offset;
-    char *last = line + strlen(line) - 1;
+  fseek(stream, 0, SEEK_SET);
+  memset(line, 0, LINE_LENGTH);
 
-    while (last >= line && apr_isspace(*last)) {
-      *last = '\0';
-      --last;
-    }
+  char CIDR[INET6_ADDRSTRLEN];
+  char IDENTITY[IPRANGER_MAX_IDENTITY_LENGTH];
+  char ADDRESS[INET6_ADDRSTRLEN];
 
-    ws_offset = 0;
-    while (line[ws_offset] && apr_isspace(line[ws_offset])) {
-      ws_offset++;
-    }
-
-    if (line[ws_offset] == 0) {
-      printf("Warning: There was an empty line in your file. It might have "
-             "broken the expected order of lines...\n");
-      continue;
-    }
-
+  for (linecount = 1; fgets(line, LINE_LENGTH, stream); linecount++) {
     if (TEST_REGIME) {
-
-      if (lineno % 2 == 1) {
-        ADDRESS = apr_pstrndup(pool_data, line + ws_offset, 40);
+      if (linecount % 2 == 1) {
+        memset(ADDRESS, 0, INET6_ADDRSTRLEN);
+        int len = strlen(line);
+        strncpy(ADDRESS, line,
+                (len <= INET6_ADDRSTRLEN) ? len - 1 : INET6_ADDRSTRLEN - 1);
       } else {
-        IDENTITY = apr_pstrndup(pool_data, line + ws_offset, 32);
+        memset(IDENTITY, 0, IPRANGER_MAX_IDENTITY_LENGTH);
+        int len = strlen(line);
+        strncpy(IDENTITY, line,
+                (len <= IPRANGER_MAX_IDENTITY_LENGTH)
+                    ? len - 1
+                    : IPRANGER_MAX_IDENTITY_LENGTH - 1);
 
         ///// READ ONE BEGIN
 
         char *not_found_msg = "";
-        char identity[32] = {0};
+        char identity[IPRANGER_MAX_IDENTITY_LENGTH] = {0};
 
         T(RC_SUCCESS == iprg_get_identity_str(ADDRESS, identity),
           "Failed while getting identity for address %s", ADDRESS);
@@ -123,7 +124,7 @@ int main(int argc, char *argv[]) {
         }
 
         char *match_msg = " ";
-        if (strncmp(identity, IDENTITY, 32) != 0) {
+        if (strncmp(identity, IDENTITY, IPRANGER_MAX_IDENTITY_LENGTH) != 0) {
           match_msg = "!";
         }
 
@@ -135,29 +136,28 @@ int main(int argc, char *argv[]) {
         ///// READ ONE END
       }
     } else {
-
-      // Load address
-      if (lineno % 2 == 1) {
-        CIDR = apr_pstrndup(pool_data, line + ws_offset, INET6_ADDRSTRLEN);
-
+      if (linecount % 2 == 1) {
         // Process Address and Identity
+        memset(IDENTITY, 0, IPRANGER_MAX_IDENTITY_LENGTH);
+        int len = strlen(line);
+        strncpy(IDENTITY, line,
+                (len <= IPRANGER_MAX_IDENTITY_LENGTH)
+                    ? len - 1
+                    : IPRANGER_MAX_IDENTITY_LENGTH - 1);
       } else {
-        IDENTITY = apr_pstrndup(pool_data, line + ws_offset, 32);
+        // Load address
+        memset(CIDR, 0, INET6_ADDRSTRLEN);
+        memset(CIDR, 0, INET6_ADDRSTRLEN);
+        int len = strlen(line);
+        strncpy(CIDR, line,
+                (len <= INET6_ADDRSTRLEN) ? len - 1 : INET6_ADDRSTRLEN - 1);
         T(RC_SUCCESS == iprg_insert_cidr_identity_pair(CIDR, IDENTITY),
           "Failed to insert CIDR %s, IDENTITY %s pair.", CIDR, IDENTITY);
       }
     }
   }
-
-  apr_file_close(fp);
-  apr_pool_destroy(pool);
-  apr_pool_destroy(pool_data);
-  apr_terminate();
-
   // Dump
-
   iprg_printf_db_dump();
-
   // Close DB env
   iprg_close_DB_env();
 }

@@ -1,4 +1,4 @@
-In config.txt, odd lines are CIDRs, even lines are identities.
+In config.txt, odd lines are identities, even lines are CIDRS.
 
 In test.txt, odd lines are IP addresses, even lines are expected identities.
 

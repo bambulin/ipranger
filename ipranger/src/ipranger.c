@@ -26,7 +26,8 @@ extern iprg_stat_t iprg_init_DB_env(const char *path_to_db_dir,
                                     bool read_only) {
   int rc = 0;
   E(mdb_env_create(&env));
-  E(mdb_env_set_mapsize(env, IPRANGER_MAX_MAP_SIZE));
+  E(mdb_env_set_mapsize(env, sysconf(_SC_PAGESIZE) *
+                                 IPRANGER_MAX_MAP_SIZE_IN_PAGES));
   // 1 DB holds IPv6 ranges, 1 IPv6 masks, 1 IPv4 ranges and 1 IPv4 masks
   E(mdb_env_set_maxdbs(env, 4));
   int flags = MDB_FIXEDMAP | MDB_NOSYNC;

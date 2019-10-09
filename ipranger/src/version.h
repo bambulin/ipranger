@@ -16,22 +16,14 @@
  *                                                                        *
  * See ACKNOWLEDGEMENTS.md for further details on licenses.               *
  *************************************************************************/
+#ifndef IPRANGER_VERSION
 
-#include <ipranger.h>
+/**
+ * @defgroup Versioning Version
+ * @ingroup IPRanger
+ * @{
+ */
+#define IPRANGER_VERSION "0.2.0"
 
-#include <ipranger.h>
-#include <lmdb.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <strings.h>
-
-#ifndef IPRANGER_TEST
-#define IPRANGER_TEST
-
-#define DEFAULT_DB_DIR "./testdb"
-
-#define LINE_LENGTH INET6_ADDRSTRLEN + 10
-
-#define RET_ERROR 1
-#define RET_SUCCESS 0
+/** @} */
 #endif
