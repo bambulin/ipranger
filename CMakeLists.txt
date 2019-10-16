@@ -5,7 +5,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O2 -std=c99 -fPIC -Wall -Wextra -pedanti
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g -p -O1 -std=c99 -fPIC -Wall -Wextra -pedantic")
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
 
-set(VERSION 0.2.0)
+set(VERSION 0.2.1)
 
 find_package(LMDB REQUIRED)
 
