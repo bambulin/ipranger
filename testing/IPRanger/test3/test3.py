@@ -14,80 +14,85 @@
 
 # author: Andronikos Kyriakou
 
-import pprint
 import string
 import random
-import time
-import sys
-from faker import Faker
-from math import log10,ceil
+import ipaddress
+import netaddr
 from tqdm import tqdm
-from netaddr import *
-from itertools import product
+
+MAX_IPV4 = ipaddress.IPv4Address._ALL_ONES  # 2 ** 32 - 1
+MAX_IPV6 = ipaddress.IPv6Address._ALL_ONES  # 2 ** 128 - 1
+#source: https://stackoverflow.com/questions/21014618/python-randomly-generated-ip-address-as-string
 
 
 def random_str(length):
 	return ''.join(random.sample(string.ascii_lowercase+string.ascii_uppercase+"!@#%^$&*()_-+=",length))
 
-def random_hex(length):
-	return ''.join(random.sample('0123456789abcdef',length))
-
 def random_num(length):
 	return ''.join('%s'%random.randint(0, 9) for i in range(length))
 
-def random_mask_v4():
-	return ''.join('%s'%random.randint(5, 32))
+# Arguments:
+# total: the total number of tuples letters: number of letters that the user id will contain, # numbers: respective numbers for the user id
+# n: number of iterations (switches of ip address per user, dataset: the output dataset file, testfile: the output test file
+# version: 4 for IPv4 and 6 for IPv6 
+def test3(total,letters, numbers,n,dataset,testfile,version):
 
-def random_mask_v6():
-	return ''.join('%s'%random.randint(10, 128))
+	# set that holds the generated IP addresses
+	ips = set()
+	# list that holds the generated user IDs
+	ids = set()
 
-def test3(letters, numbers,dataset,testfile):
-	#total = (pow(26,letters)*pow(10,numbers))
-	total = 100
-	faker = Faker()
-	ipv4 = []
-	ipv6 = []
-	tuples = {}
-	ids = []
+	# open two files for writing: input dataset and test file
 	with open(dataset,"w") as d,open(testfile,"w") as t:
+		print("\n[+] Generating user IDs") 
+		# generate combinations of length(letters) with a vocabulary of ascii lowercase, uppercase and symbols
 		for i in tqdm(range(total)):
 			while True:
 				id_=random_str(letters)+'-'+str(random_num(numbers))
-				if id_ not in ids:
-					ids.append(id_)
+				# store the current size of the set
+				old_len = len(ids)
+				# update the set 
+				ids.add(id_)
+				# if the new size is larger, then this is a unique id, else generate new one
+				if len(ids)>old_len:
 					break
+		ids = list(ids)
+		# perform n IP assignments/user
+		print("[+] Generating User-IP assignments") 
+		for rounds in range(n):
+			print("Iteration #"+str(rounds))
+			for i in tqdm(range(len(ids))):
+				# pick a user
+				id_=ids[i]
+			
+				# generate unique IP addresses in order to avoid collisions (same IP address to N different users)
+				while True: 
+					# if version equals 4, generate an IPv4 address
+					if version == 4:				
+						ip = str(ipaddress.IPv4Address._string_from_ip_int(random.randint(0, MAX_IPV4))) + "/32"
+					# if version equals 6, generate an IPv6 address
+					elif version == 6:
+						ip = str(ipaddress.IPv6Address._string_from_ip_int(random.randint(0, MAX_IPV6))) + "/128"
 
-
-
-		#total = 10 * len(ids)
-
-		for i in tqdm(range(total)):
-			id_=ids[random.randint(0,len(ids)-1)]
-			## the total number of combinations is
-			## pow(26,<num_of_letters>:2)*pow(10,<num_of_numbers>:1) = 6760
-			if i%2==0:
-				while True:
-					ip = str(faker.ipv4()) + "/" + "32"
-					if ip not in ipv4:
-						ipv4.append(ip)
+					# store the current size of the set
+					old_len = len(ips)
+					# update the set 
+					ips.add(ip)
+					# if the new size is larger, then this is a unique IP address, else generate new one
+					if len(ips)>old_len:
 						break
-			else:
-				while True:
-					ip = str(faker.ipv6()) + "/" + "128"
-					if ip not in ipv6:
-						ipv6.append(ip)
-						break
-			tuples[id_] = ip
-			d.write(id_+"\n"+ip+"\n")
-		# Create the test file - it holds the last known address of a user
-		for i in tuples:
-			t.write(tuples[i]+"\n"+i+"\n")
+						
+				# write tuple to the dataset
+				d.write(id_+"\n"+ip+"\n")
 
-
+				# if this is the last round, create the test file that holds the last know address of each user
+				if (rounds == n-1):
+					t.write(ip+"\n"+id_+"\n")
 
 
 if __name__ == "__main__":
-	test3(60,3,"dataset3.txt","test3.txt")
+	test3(100000,60,2,1,"dataset3v4_small.txt","test3v4_small.txt",4)
+	test3(100000,60,2,1,"dataset3v6_small.txt","test3v6_small.txt",6)
 
 
 
