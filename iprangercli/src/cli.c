@@ -117,7 +117,7 @@ int main(int argc, char *argv[]) {
         char identity[IPRANGER_MAX_IDENTITY_LENGTH] = {0};
 
         T(RC_SUCCESS == iprg_get_identity_str(ADDRESS, identity),
-          "Failed while getting identity for address %s", ADDRESS);
+          "Failed while getting identity for address %s\n", ADDRESS);
 
         if (identity == NULL) {
           not_found_msg = "NOT FOUND";
@@ -152,7 +152,7 @@ int main(int argc, char *argv[]) {
         strncpy(CIDR, line,
                 (len <= INET6_ADDRSTRLEN) ? len - 1 : INET6_ADDRSTRLEN - 1);
         T(RC_SUCCESS == iprg_insert_cidr_identity_pair(CIDR, IDENTITY),
-          "Failed to insert CIDR %s, IDENTITY %s pair.", CIDR, IDENTITY);
+          "Failed to insert CIDR %s, IDENTITY %s pair.\n", CIDR, IDENTITY);
       }
     }
   }

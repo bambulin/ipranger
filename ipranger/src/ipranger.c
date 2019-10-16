@@ -71,10 +71,6 @@ extern iprg_stat_t iprg_insert_cidr_identity_pair(const char *CIDR,
   MDB_dbi dbi_ipv4_masks;
   MDB_txn *txn;
 
-  char v_data[IPRANGER_MAX_IDENTITY_LENGTH];
-  memset(v_data, 0, sizeof(v_data));
-  memcpy(v_data, IDENTITY, strlen(IDENTITY) + 1);
-
   if (ip_range.type == IPv6) {
     MDB_val key, data;
 
@@ -91,29 +87,23 @@ extern iprg_stat_t iprg_insert_cidr_identity_pair(const char *CIDR,
     key.mv_size = sizeof(k_data);
     key.mv_data = &k_data;
 
+    char v_data[IPRANGER_MAX_IDENTITY_LENGTH];
+    memset(v_data, 0, sizeof(v_data));
+    memcpy(v_data, IDENTITY, strlen(IDENTITY) + 1);
     data.mv_size = sizeof(v_data);
     data.mv_data = v_data;
 
-    // TODO: Change to:
-    ///** For mdb_cursor_put: overwrite the current key/data pair */
-    //#define MDB_CURRENT	0x40
-    if (RES(MDB_KEYEXIST, mdb_put(txn, dbi_ipv6, &key, &data, MDB_NODUPDATA))) {
+    if (RES(MDB_KEYEXIST,
+            mdb_put(txn, dbi_ipv6, &key, &data, MDB_NOOVERWRITE))) {
+      memset(v_data, 0, sizeof(v_data));
+      memcpy(v_data, IDENTITY, strlen(IDENTITY) + 1);
+      data.mv_data = v_data;
       printf("Updating key: ");
       ipv6_to_str((const struct in6_addr *)key.mv_data);
       printf(" with data: %.*s\n", (int)data.mv_size, (char *)data.mv_data);
-      if (RES(MDB_NOTFOUND, mdb_del(txn, dbi_ipv6, &key, &data))) {
-        mdb_txn_abort(txn);
-        // TODO something? What is this state? Somebody delted the key in
-        // the meantime?
-        CHECK(1, "Unexpected state during key updates.");
-      }
-      if (RES(MDB_KEYEXIST,
-              mdb_put(txn, dbi_ipv6, &key, &data, MDB_NODUPDATA))) {
-        mdb_txn_abort(txn);
-        // TODO something?  What is this state? Somebody delted the key in
-        // the meantime?
-        CHECK(1, "Unexpected state during key updates.");
-      }
+      // TODO Error handling
+      mdb_del(txn, dbi_ipv6, &key, NULL);
+      mdb_put(txn, dbi_ipv6, &key, &data, MDB_NODUPDATA);
     } else {
       printf("Inserting key: ");
       ipv6_to_str((const struct in6_addr *)key.mv_data);
@@ -145,29 +135,23 @@ extern iprg_stat_t iprg_insert_cidr_identity_pair(const char *CIDR,
     key.mv_size = sizeof(k_data);
     key.mv_data = &k_data;
 
+    char v_data[IPRANGER_MAX_IDENTITY_LENGTH];
+    memset(v_data, 0, sizeof(v_data));
+    memcpy(v_data, IDENTITY, strlen(IDENTITY) + 1);
     data.mv_size = sizeof(v_data);
     data.mv_data = v_data;
 
-    // TODO: Change to:
-    ///** For mdb_cursor_put: overwrite the current key/data pair */
-    //#define MDB_CURRENT	0x40
-    if (RES(MDB_KEYEXIST, mdb_put(txn, dbi_ipv4, &key, &data, MDB_NODUPDATA))) {
+    if (RES(MDB_KEYEXIST,
+            mdb_put(txn, dbi_ipv4, &key, &data, MDB_NOOVERWRITE))) {
+      memset(v_data, 0, sizeof(v_data));
+      memcpy(v_data, IDENTITY, strlen(IDENTITY) + 1);
+      data.mv_data = v_data;
       printf("Updating key: ");
       ipv4_to_str((const struct in_addr *)key.mv_data);
       printf(" with data: %.*s\n", (int)data.mv_size, (char *)data.mv_data);
-      if (RES(MDB_NOTFOUND, mdb_del(txn, dbi_ipv4, &key, &data))) {
-        mdb_txn_abort(txn);
-        // TODO something? What is this state? Somebody delted the key in
-        // the meantime?
-        CHECK(1, "Unexpected state during key updates.");
-      }
-      if (RES(MDB_KEYEXIST,
-              mdb_put(txn, dbi_ipv4, &key, &data, MDB_NODUPDATA))) {
-        mdb_txn_abort(txn);
-        // TODO something?  What is this state? Somebody delted the key in
-        // the meantime?
-        CHECK(1, "Unexpected state during key updates.");
-      }
+      // TODO Error handling
+      mdb_del(txn, dbi_ipv4, &key, NULL);
+      mdb_put(txn, dbi_ipv4, &key, &data, MDB_NODUPDATA);
     } else {
       printf("Inserting key: ");
       ipv4_to_str((const struct in_addr *)key.mv_data);
