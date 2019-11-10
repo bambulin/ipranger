@@ -54,8 +54,7 @@
 #define CHECK(test, msg)                                                       \
   ((test) ? (void)0                                                            \
           : ((void)fprintf(stderr, "%s:%d: %s: %s\n", __FILE__, __LINE__, msg, \
-                           mdb_strerror(rc)),                                  \
-             abort()))
+                           mdb_strerror(rc))))
 #define DIE(X, ...)                                                            \
   fprintf(stderr, "ERROR %s:%d: " X "\n", __FILE__, __LINE__, ##__VA_ARGS__);  \
   exit(EXIT_FAILURE);

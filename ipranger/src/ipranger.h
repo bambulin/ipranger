@@ -74,9 +74,9 @@
 /** Type for specifying an error or status code. */
 typedef int iprg_stat_t;
 /** Successful operation */
-#define RC_SUCCESS 1
+#define RC_SUCCESS 0
 /** Failed operation */
-#define RC_FAILURE 0
+#define RC_FAILURE 1
 /** @} */
 
 /**
@@ -124,6 +124,24 @@ extern iprg_stat_t iprg_insert_cidr_identity_pair(const char *cidr,
 extern iprg_stat_t iprg_insert_cidr_identity_pairs(const char *cidrs[],
                                                    const char *identities[],
                                                    int length);
+
+/**
+ * @brief Get Identity for a given string Address
+ *
+ * The address is combined with each mask previously used in @see
+ * iprg_insert_cidr_identity_pair and the LAST address of thus created subnet is
+ * used for lookup. Delete will remove all keys with specified address key.
+ *
+ * @param address pointer to up to 40 chars long array, e.g.
+ * 8078:5a6c:9a02:43cb:ffff:ffff:ffff:ffff
+ * Note the library accepts also compressed format, e.g.
+ * f2f5:3aa1:d14e:494e::20c8
+ * @see IPRANGER_NO_MATCH_STR
+ *
+ * @return RC_SUCCESS or RC_FAILURE. If RC_FAILURE is returned, the content of
+ * identity is not defined and should be discarded.
+ */
+extern iprg_stat_t iprg_delete_identity_str(const char *address);
 
 /**
  * @brief Get Identity for a given string Address
@@ -205,5 +223,11 @@ extern void iprg_printf_db_dump();
 void ipv6_db_dump();
 void ipv4_db_dump();
 /** @} */
+
+extern iprg_stat_t iprg_delete_by_key(const char *table, const char *query_key);
+extern iprg_stat_t iprg_delete_by_value(const char *table, const char *query_value);
+extern iprg_stat_t iprg_insert(const char *table, const char *query_key, const char* query_value);
+extern iprg_stat_t iprg_select(const char *table, const char *query_key, void *value, int size);
+
 
 #endif

@@ -30,7 +30,7 @@ extern iprg_stat_t iprg_init_DB_env(const char *path_to_db_dir,
                                  IPRANGER_MAX_MAP_SIZE_IN_PAGES));
   // 1 DB holds IPv6 ranges, 1 IPv6 masks, 1 IPv4 ranges and 1 IPv4 masks
   E(mdb_env_set_maxdbs(env, 4));
-  int flags = MDB_FIXEDMAP | MDB_NOSYNC;
+  int flags = /*MDB_FIXEDMAP |*/ MDB_NOSYNC;
   if (read_only) {
     flags |= MDB_RDONLY;
   }
@@ -262,6 +262,127 @@ extern iprg_stat_t iprg_insert_cidr_identity_pairs(const char *cidrs[],
     }
   }
   return rc;
+}
+
+extern iprg_stat_t iprg_select(const char *table, const char *query_key, void *value, int size)
+{
+  int rc = 0;
+  MDB_dbi dbi;
+  MDB_txn *txn = NULL;
+  MDB_cursor *cursor = NULL;
+  MDB_val key, data;
+  
+  if (value == NULL)
+  {
+    return -1;
+  }
+
+  E(mdb_txn_begin(env, NULL, 0, &txn));
+  E(mdb_dbi_open(txn, table, MDB_DUPSORT, &dbi));
+  E(mdb_cursor_open(txn, dbi, &cursor));
+
+  char empty[32] = {0};
+  key.mv_size = strlen(query_key);
+  key.mv_data = query_key;
+  data.mv_size = sizeof(empty);
+  data.mv_data = &empty;
+  
+  E(mdb_cursor_get(cursor, &key, &data, MDB_SET_KEY));
+
+  strncpy(value, data.mv_data, data.mv_size);
+
+  mdb_cursor_close(cursor);
+  mdb_txn_abort(txn);
+  mdb_dbi_close(env, dbi);
+
+  return MDB_SUCCESS;
+}
+
+extern iprg_stat_t iprg_insert(const char *table, const char *query_key, const char* query_value)
+{
+  int rc = 0;
+  MDB_dbi dbi;
+  MDB_txn *txn = NULL;
+  MDB_cursor *cursor = NULL;
+  MDB_val key, data;
+
+  E(mdb_txn_begin(env, NULL, 0, &txn));
+  E(mdb_dbi_open(txn, table, MDB_CREATE | MDB_DUPSORT, &dbi));
+  E(mdb_cursor_open(txn, dbi, &cursor));
+
+  key.mv_size = strlen(query_key);
+  key.mv_data = query_key;
+  data.mv_size = sizeof(query_value);
+  data.mv_data = query_value;
+  
+  mdb_cursor_put(cursor, &key, &data, MDB_NODUPDATA);
+
+  mdb_cursor_close(cursor);
+  mdb_txn_commit(txn);
+  mdb_dbi_close(env, dbi);
+
+  return MDB_SUCCESS;
+}
+
+extern iprg_stat_t iprg_delete_by_key(const char *table, const char *query_key)
+{
+  int rc = 0;
+  MDB_dbi dbi;
+  MDB_txn *txn = NULL;
+  MDB_cursor *cursor = NULL;
+  MDB_val key, data;
+
+  E(mdb_txn_begin(env, NULL, 0, &txn));
+  E(mdb_dbi_open(txn, table, MDB_DUPSORT, &dbi));
+  E(mdb_cursor_open(txn, dbi, &cursor));
+
+  char empty[32] = {0};
+
+  key.mv_size = strlen(query_key);
+  key.mv_data = &query_key;
+  data.mv_size = sizeof(empty);
+  data.mv_data = empty;
+  
+  if ((rc = mdb_cursor_get(cursor, &key, &data, MDB_SET_KEY)) == 0)
+  {
+    do 
+    {
+        mdb_cursor_del(cursor, 0);
+    } while ((rc = mdb_cursor_get(cursor, &key, &data, MDB_NEXT)) == 0); 
+  }
+
+  mdb_cursor_close(cursor);
+  mdb_txn_abort(txn);
+  mdb_dbi_close(env, dbi);
+
+  return MDB_SUCCESS;
+}
+
+extern iprg_stat_t iprg_delete_by_value(const char *table, const char *query_value)
+{
+  int rc = 0;
+  MDB_dbi dbi;
+  MDB_txn *txn = NULL;
+  MDB_cursor *cursor = NULL;
+  MDB_val key, data;
+
+  E(mdb_txn_begin(env, NULL, 0, &txn));
+  E(mdb_dbi_open(txn, table, MDB_DUPSORT, &dbi));
+  E(mdb_cursor_open(txn, dbi, &cursor));
+  
+  while ((rc = mdb_cursor_get(cursor, &key, &data, MDB_NEXT)) == 0)
+  {
+    if (memcmp((void *)data.mv_data, (void *)query_value, strlen(query_value)) == 0)
+    {
+      mdb_cursor_del(cursor, 0);
+    }
+  }
+
+  mdb_cursor_close(cursor);
+  mdb_txn_abort(txn);
+  mdb_dbi_close(env, dbi);
+
+  return MDB_SUCCESS;
 }
 
 extern iprg_stat_t iprg_get_identity_str(const char *address, char *identity) {

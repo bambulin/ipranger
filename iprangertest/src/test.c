@@ -60,8 +60,16 @@ int main(void) {
   remove(DEFAULT_DB_DIR "/lock.mdb");
   const bool read_only = false;
 
+  //mkdir("testdb", 0);
   T(RC_SUCCESS == iprg_init_DB_env(DEFAULT_DB_DIR, read_only),
     "DB init failed.");
+
+  char value[32] = {0};
+  iprg_insert("test", "key", "value");
+  iprg_select("test", "key", &value, sizeof(value));
+  //printf("test %s", value);
+  iprg_delete_by_value("test", "value");
+  iprg_delete_by_key("test", "key");
 
   basic_ipv6_test();
 
