@@ -65,11 +65,11 @@ int main(void) {
     "DB init failed.");
 
   char value[32] = {0};
-  iprg_insert("test", "key", "value");
-  iprg_select("test", "key", &value, sizeof(value));
+  iprg_insert_string("test", "key", "value");
+  iprg_select_string("test", "key", &value, sizeof(value));
   //printf("test %s", value);
-  iprg_delete_by_value("test", "value");
-  iprg_delete_by_key("test", "key");
+  iprg_delete_by_value_string("test", "value");
+  iprg_delete_by_key_string("test", "key");
 
   basic_ipv6_test();
 

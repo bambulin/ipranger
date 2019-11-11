@@ -264,41 +264,52 @@ extern iprg_stat_t iprg_insert_cidr_identity_pairs(const char *cidrs[],
   return rc;
 }
 
-extern iprg_stat_t iprg_select(const char *table, const char *query_key, void *value, int size)
+extern iprg_stat_t iprg_select_string(const char *table, const char *query_key, char *query_value, unsigned long value_size)
+{
+  return iprg_select_data(table, (void *)query_key, strlen(query_key), (void *)query_value, value_size);
+}
+
+extern iprg_stat_t iprg_select_data(const char *table, void *query_key, unsigned long key_size, void *query_value, unsigned long value_size)
 {
   int rc = 0;
   MDB_dbi dbi;
   MDB_txn *txn = NULL;
   MDB_cursor *cursor = NULL;
   MDB_val key, data;
-  
-  if (value == NULL)
-  {
-    return -1;
-  }
 
   E(mdb_txn_begin(env, NULL, 0, &txn));
   E(mdb_dbi_open(txn, table, MDB_DUPSORT, &dbi));
   E(mdb_cursor_open(txn, dbi, &cursor));
 
-  char empty[32] = {0};
-  key.mv_size = strlen(query_key);
+  key.mv_size = key_size;
   key.mv_data = query_key;
-  data.mv_size = sizeof(empty);
-  data.mv_data = &empty;
+  data.mv_size = value_size;
+  data.mv_data = &query_value;
   
   E(mdb_cursor_get(cursor, &key, &data, MDB_SET_KEY));
 
-  strncpy(value, data.mv_data, data.mv_size);
+  if (data.mv_size > value_size)
+  {
+    rc = -1;
+  }
+  else
+  {
+    memcpy(query_value, data.mv_data, data.mv_size);
+  }
 
   mdb_cursor_close(cursor);
   mdb_txn_abort(txn);
   mdb_dbi_close(env, dbi);
 
-  return MDB_SUCCESS;
+  return rc;
 }
 
-extern iprg_stat_t iprg_insert(const char *table, const char *query_key, const char* query_value)
+extern iprg_stat_t iprg_insert_string(const char *table, const char *query_key, const char* query_value)
+{
+  return iprg_insert_data(table, (void *)query_key, strlen(query_key), (void *)query_value, strlen(query_value));
+}
+
+extern iprg_stat_t iprg_insert_data(const char *table, void *query_key, unsigned long key_size, void* query_value, unsigned long value_size)
 {
   int rc = 0;
   MDB_dbi dbi;
@@ -310,12 +321,12 @@ extern iprg_stat_t iprg_insert(const char *table, const char *query_key, const c
   E(mdb_dbi_open(txn, table, MDB_CREATE | MDB_DUPSORT, &dbi));
   E(mdb_cursor_open(txn, dbi, &cursor));
 
-  key.mv_size = strlen(query_key);
+  key.mv_size = key_size;
   key.mv_data = query_key;
-  data.mv_size = sizeof(query_value);
+  data.mv_size = value_size;
   data.mv_data = query_value;
   
-  mdb_cursor_put(cursor, &key, &data, MDB_NODUPDATA);
+  E(mdb_cursor_put(cursor, &key, &data, MDB_NODUPDATA));
 
   mdb_cursor_close(cursor);
   mdb_txn_commit(txn);
@@ -324,7 +335,13 @@ extern iprg_stat_t iprg_insert(const char *table, const char *query_key, const c
   return MDB_SUCCESS;
 }
 
-extern iprg_stat_t iprg_delete_by_key(const char *table, const char *query_key)
+extern iprg_stat_t iprg_delete_by_key_string(const char *table, const char *query_key)
+{
+  return iprg_delete_by_key_data(table, (void *)query_key, strlen(query_key));
+}
+
+
+extern iprg_stat_t iprg_delete_by_key_data(const char *table, void *query_key, unsigned long key_size)
 {
   int rc = 0;
   MDB_dbi dbi;
@@ -336,19 +353,19 @@ extern iprg_stat_t iprg_delete_by_key(const char *table, const char *query_key)
   E(mdb_dbi_open(txn, table, MDB_DUPSORT, &dbi));
   E(mdb_cursor_open(txn, dbi, &cursor));
 
-  char empty[32] = {0};
+  char empty[4006] = {0};
 
-  key.mv_size = strlen(query_key);
+  key.mv_size = key_size;
   key.mv_data = &query_key;
   data.mv_size = sizeof(empty);
   data.mv_data = empty;
   
-  if ((rc = mdb_cursor_get(cursor, &key, &data, MDB_SET_KEY)) == 0)
+  if ((rc = mdb_cursor_get(cursor, &key, &data, MDB_SET_KEY)) == MDB_SUCCESS)
   {
     do 
     {
-        mdb_cursor_del(cursor, 0);
-    } while ((rc = mdb_cursor_get(cursor, &key, &data, MDB_NEXT)) == 0); 
+        E(mdb_cursor_del(cursor, 0));
+    } while ((rc = mdb_cursor_get(cursor, &key, &data, MDB_NEXT)) == MDB_SUCCESS); 
   }
 
   mdb_cursor_close(cursor);
@@ -358,7 +375,12 @@ extern iprg_stat_t iprg_delete_by_key(const char *table, const char *query_key)
   return MDB_SUCCESS;
 }
 
-extern iprg_stat_t iprg_delete_by_value(const char *table, const char *query_value)
+extern iprg_stat_t iprg_delete_by_value_string(const char *table, const char *query_value)
+{
+  return iprg_delete_by_value_data(table, (void *)query_value, strlen(query_value));
+}
+
+extern iprg_stat_t iprg_delete_by_value_data(const char *table, void *query_value, unsigned long value_size)
 {
   int rc = 0;
   MDB_dbi dbi;
@@ -372,9 +394,10 @@ extern iprg_stat_t iprg_delete_by_value(const char *table, const char *query_val
   
   while ((rc = mdb_cursor_get(cursor, &key, &data, MDB_NEXT)) == 0)
   {
-    if (memcmp((void *)data.mv_data, (void *)query_value, strlen(query_value)) == 0)
+    if (data.mv_size == value_size &&
+      memcmp((void *)data.mv_data, (void *)query_value, value_size) == 0)
     {
-      mdb_cursor_del(cursor, 0);
+      E(mdb_cursor_del(cursor, 0));
     }
   }
 
@@ -618,12 +641,6 @@ extern iprg_stat_t iprg_get_identity_ip_addrs(struct ip_addr *addresses[],
     }
   }
   return rc;
-}
-
-extern iprg_stat_t iprg_check_ip_range(char *address, int *identity, ...) {
-  int rc = 0;
-  CHECK(1, "Not implemented.");
-  return RC_FAILURE;
 }
 
 extern void iprg_printf_db_dump() {

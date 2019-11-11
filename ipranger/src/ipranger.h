@@ -197,19 +197,6 @@ extern iprg_stat_t iprg_get_identity_ip_addrs(struct ip_addr *addresses[],
                                               char *identities[], int length);
 
 /**
- * @brief No idea what Ashur means with this :-)
- *
- * @param address pointer to up to 40 chars long array, e.g.
- * 8078:5a6c:9a02:43cb:ffff:ffff:ffff:ffff Note the library accepts also
- * compressed format, e.g. f2f5:3aa1:d14e:494e::20c8
- * @param identity multiple identities to....what? Check whther they belong ot
- * he IP...?
- *
- * @return RC_SUCCESS or RC_FAILURE
- */
-extern iprg_stat_t iprg_check_ip_range(char *address, int *identity, ...);
-
-/**
  * @brief Should be called after all DB operations.
  */
 extern void iprg_close_DB_env();
@@ -224,10 +211,14 @@ void ipv6_db_dump();
 void ipv4_db_dump();
 /** @} */
 
-extern iprg_stat_t iprg_delete_by_key(const char *table, const char *query_key);
-extern iprg_stat_t iprg_delete_by_value(const char *table, const char *query_value);
-extern iprg_stat_t iprg_insert(const char *table, const char *query_key, const char* query_value);
-extern iprg_stat_t iprg_select(const char *table, const char *query_key, void *value, int size);
+extern iprg_stat_t iprg_delete_by_key_string(const char *table, const char *query_key);
+extern iprg_stat_t iprg_delete_by_key_data(const char *table, void *query_key, unsigned long key_size);
+extern iprg_stat_t iprg_delete_by_value_string(const char *table, const char *query_value);
+extern iprg_stat_t iprg_delete_by_value_data(const char *table, void *query_value, unsigned long value_size);
+extern iprg_stat_t iprg_insert_string(const char *table, const char *query_key, const char* query_value);
+extern iprg_stat_t iprg_insert_data(const char *table, void *query_key, unsigned long key_size, void* query_value, unsigned long value_size);
+extern iprg_stat_t iprg_select_string(const char *table, const char *query_key, char *query_value, unsigned long value_size);
+extern iprg_stat_t iprg_select_data(const char *table, void *query_key, unsigned long key_size, void *query_value, unsigned long value_size);
 
 
 #endif

@@ -47,7 +47,7 @@
 #define T(test, ...)                                                           \
   ((test) ? (void)0                                                            \
           : ((void)fprintf(stderr, "%s:%d: ", __FILE__, __LINE__),             \
-             (void)fprintf(stderr, ##__VA_ARGS__), abort()))
+             (void)fprintf(stderr, __VA_ARGS__), abort()))
 
 #define E(expr) CHECK((rc = (expr)) == MDB_SUCCESS, #expr)
 #define RES(err, expr) ((rc = expr) == (err) || (CHECK(!rc, #expr), 0))
