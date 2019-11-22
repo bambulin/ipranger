@@ -11,6 +11,10 @@ find_package(LMDB REQUIRED)
 
 include_directories(${LMDB_INCLUDE_DIR})
 
+find_package(JNI REQUIRED)
+
+include_directories(${JNI_INCLUDE_DIRS})
+
 configure_file(${CMAKE_SOURCE_DIR}/ipranger/src/version.h.in ${CMAKE_SOURCE_DIR}/ipranger/src/version.h @ONLY)
 
 ADD_SUBDIRECTORY(ipranger)

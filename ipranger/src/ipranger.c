@@ -579,3 +579,10 @@ void ipv4_db_dump() {
   mdb_txn_abort(txn);
   mdb_dbi_close(env, dbi_ipv4);
 }
+
+#define IPRG_INIT_DB_ENV_JAVA(type, name) JNIEXPORT type JNICALL Java_io_whalebone_iprangerjava_IpRangerImpl_##name
+IPRG_INIT_DB_ENV_JAVA(jint, initDb)(JNIEnv *e, jstring jpath_to_db_dir, jboolean read_only) {
+    const char *path_to_db_dir = (*e)->GetStringUTFChars(e, jpath_to_db_dir, NULL);
+    iprg_stat_t code = iprg_init_DB_env(path_to_db_dir, (bool) read_only);
+    return (jint) code;
+}

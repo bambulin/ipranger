@@ -29,6 +29,7 @@
 #include "util.h"
 #include "version.h"
 #include <lmdb.h>
+#include <jni.h>
 
 #ifndef IPRANGER
 #define IPRANGER
